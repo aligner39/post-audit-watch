@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<title>Post-Audit Watch</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an engineering incident record. One long timeline bar opens it; everything after is plain evidence. */
+:root {
+  --paper: #eef1f2;
+  --sheet: #f8fafa;
+  --ink: #12222b;
+  --muted: #526771;
+  --line: #c9d3d7;
+  --span: #d9e3e6;
+  --flag: #0f6f73;
+  --loss: #b4361f;
+  --display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --body: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f191f; --sheet: #16232a; --ink: #e6edef; --muted: #9db0b8; --line: #2f424c;
+    --span: #233640; --flag: #5cc3c6; --loss: #f0876f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f191f; --sheet: #16232a; --ink: #e6edef; --muted: #9db0b8; --line: #2f424c;
+  --span: #233640; --flag: #5cc3c6; --loss: #f0876f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper); color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--body);
+}
+.wrap {
+  max-width: 46rem; margin: 0 auto;
+  padding-block: 3.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 3.25rem;
+}
+section { display: grid; gap: 1rem; min-width: 0; }
+h1, h2 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.3rem, 7vw, 3.5rem); line-height: 1.06; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; line-height: 1.2; }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--flag); }
+.eyebrow { font: 500 0.8rem/1.3 var(--mono); letter-spacing: 0.04em; color: var(--muted); margin: 0; }
+.lede { font-size: 1.2rem; }
+.note { color: var(--muted); font-size: 0.95rem; }
+.contact {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem;
+  font: 500 0.95rem/1.4 var(--mono);
+}
+
+.bar-wrap { background: var(--sheet); border: 1px solid var(--line); padding: 1.25rem; display: grid; gap: 0.75rem; }
+.bar-days { font: 700 clamp(2.2rem, 8vw, 3.25rem)/1 var(--display); letter-spacing: -0.02em; }
+.bar { height: 14px; background: var(--span); position: relative; }
+.bar::before, .bar::after { content: ""; position: absolute; top: -5px; bottom: -5px; width: 5px; }
+.bar::before { left: 0; background: var(--flag); }
+.bar::after { right: 0; background: var(--loss); }
+.ends { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.92rem; line-height: 1.4; }
+.ends div { min-width: 0; }
+.ends div:last-child { text-align: right; }
+.ends strong { display: block; font: 500 0.82rem/1.4 var(--mono); }
+.ends .a strong { color: var(--flag); }
+.ends .b strong { color: var(--loss); }
+
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.97rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.6rem 0.9rem 0.6rem 0; border-bottom: 1px solid var(--line); }
+th { font: 500 0.8rem/1.3 var(--mono); color: var(--muted); }
+td.n { font: 500 0.95rem/1.5 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.price { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; border-top: 2px solid var(--ink); padding-top: 1rem; }
+.price > div { min-width: 0; display: grid; gap: 0.35rem; align-content: start; }
+.amount { font: 700 1.9rem/1.1 var(--display); }
+ul { margin: 0; padding-left: 1.15rem; display: grid; gap: 0.4rem; max-width: 65ch; }
+
+.flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; font-size: 0.95rem; }
+.flow > div { padding: 0.8rem 0.9rem; border: 1px solid var(--line); margin-left: -1px; background: var(--sheet); min-width: 0; }
+.flow strong { display: block; font: 500 0.85rem/1.4 var(--mono); }
+
+@media (max-width: 560px) {
+  .price, .flow { grid-template-columns: 1fr; }
+  .flow > div { margin-left: 0; margin-top: -1px; }
+  td.n { white-space: normal; }
+}
+</style>
+
+<main class="wrap">
+
+  <header style="display:grid;gap:1rem">
+    <p class="eyebrow">[YOUR NAME] / AI agent pipelines for crypto and security teams</p>
+    <h1>Audits check a snapshot. Your protocol keeps changing.</h1>
+    <p class="lede">I build cost-capped, fail-closed AI agent pipelines. Post-Audit Watch starts from a running watch on proxy and owner changes, and a pilot extends it to the changes that matter for your protocol.</p>
+    <p class="contact"><span>Telegram [@handle]</span><span>X [@handle]</span></p>
+  </header>
+
+  <section aria-label="The Notional timeline">
+    <div class="bar-wrap">
+      <div class="bar-days">2,082 days</div>
+      <div class="bar" role="img" aria-label="Timeline from the December 2020 audit finding to the September 2026 exploit"></div>
+      <div class="ends">
+        <div class="a"><strong>22 Dec 2020</strong>OpenZeppelin audit [L10] flags unchecked casts to uint128 in ExchangeRate.sol, rated Low</div>
+        <div class="b"><strong>4 Sep 2026</strong>About $1.73M drained from Notional's V1 escrow, reported as an unchecked uint128 cast</div>
+      </div>
+    </div>
+    <p>The finding was public. So was the live code. Nothing was comparing the two every day.</p>
+    <p class="note">My audit-diff pipeline marks that finding STILL_PRESENT at lines 52 and 83 of the deployed ExchangeRate source. That result is dated 7 Sep 2026, after the exploit, and its input was one finding, L10, picked after the exploit. It is a replay that shows the method, not a hit rate, and it did not catch the bug. STILL_PRESENT means the quoted line of text exists. Notional's official incident report was not available in the coverage I checked, so the link between L10 and the exploit is my reading of public reports.</p>
+  </section>
+
+  <section>
+    <h2>The damage often comes after the audit</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Incident</th><th>What changed or sat unreviewed</th><th>Reported loss</th></tr></thead>
+        <tbody>
+          <tr><td>Moonwell, Feb 2026</td><td>Oracle configuration executed through governance</td><td class="n">~$1.78M</td></tr>
+          <tr><td>Drift, Apr 2026</td><td>Admin takeover using pre-signed approvals after a zero-timelock council migration</td><td class="n">~$285M</td></tr>
+          <tr><td>Kelp, Apr 2026</td><td>Single-verifier bridge configuration (responsibility disputed)</td><td class="n">~$292M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">I don't claim my system would have prevented any of these. They show the category: changes and settings that a point-in-time code review doesn't keep watching. My current watch would not see an oracle or verifier setting change.</p>
+  </section>
+
+  <section>
+    <h2>Post-Audit Watch</h2>
+    <p>It works on public data. I need no keys, no repo access and no write access.</p>
+    <p><strong>Runs today</strong></p>
+    <ul>
+      <li><strong>Control-plane watch:</strong> proxy implementation, proxy admin, owner and the first DEFAULT_ADMIN_ROLE member, with an alert on any change.</li>
+      <li><strong>Audit text matching:</strong> looks for a finding's quoted line in deployed source. It is a text match, and I have not measured its precision.</li>
+      <li><strong>Alerts</strong> by Telegram or webhook, with a daily digest.</li>
+    </ul>
+    <p><strong>I'd build this in your pilot</strong></p>
+    <ul>
+      <li><strong>One new watcher, chosen with you:</strong> queued governance actions, oracle and key-parameter changes, or a reviewed baseline that answers "was this ever reviewed?"</li>
+      <li><strong>Findings register:</strong> each public audit finding marked acknowledged, text still found, or can't tell. Text no longer found counts as can't tell, because a rename also removes the text.</li>
+      <li><strong>Agent triage</strong> of each change.</li>
+      <li><strong>90-day replay:</strong> what changed in the last 90 days and what would have fired.</li>
+    </ul>
+    <div class="price">
+      <div>
+        <p class="eyebrow">Pilot, 2 weeks</p>
+        <p class="amount">$3,500</p>
+        <p class="note">Fixed fee, half up front. Up to 3 chains, 25 contracts and one new watcher.</p>
+      </div>
+      <div>
+        <p class="eyebrow">After the pilot</p>
+        <p class="amount">$2,000 / month</p>
+        <p class="note">I host, run and tune it. LLM costs included under a hard cap. Cancel with 30 days' notice.</p>
+      </div>
+    </div>
+    <p class="note">This is not an audit, a guarantee or real-time prevention. It ranks changes for a human to judge, and it does not pause anything.</p>
+  </section>
+
+  <section>
+    <h2>The proof: THREAT-ENGINE</h2>
+    <p>I built an autonomous pipeline that ingests on-chain and audit data, reasons over it with LLMs, and runs unattended on a server. A client buys the engineering behind it: agents that run alone without overspending or inventing confidence.</p>
+    <div class="tbl">
+      <table>
+        <tbody>
+          <tr><td class="n">3,048</td><td>public Code4rena findings normalized, across 246 protocols</td></tr>
+          <tr><td class="n">22,059</td><td>contract source sets ingested</td></tr>
+          <tr><td class="n">780</td><td>addresses on the control-plane watch, scheduled every 15 minutes</td></tr>
+          <tr><td class="n">30</td><td>jobs defined in the deployment schedule, from every 5 minutes to daily, with a watchdog over them</td></tr>
+          <tr><td class="n">215</td><td>commits in 7 weeks (Sep 15 to Nov 4, 2026)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Three roles check each other.</strong> A proposer emits structured hypotheses, a skeptic attacks them, and a validator checks required fields before anything is trusted. A truncated model response loses only its broken part, because complete JSON objects are salvaged. Today these roles review code hypotheses. They do not yet review control-plane changes.</p>
+  </section>
+
+  <section>
+    <h2>It can't quietly overspend</h2>
+    <div class="flow">
+      <div><strong>1. Reserve</strong>Money is booked under a file lock before the paid call goes out.</div>
+      <div><strong>2. Call</strong>If the worker dies here, the money stays committed.</div>
+      <div><strong>3. Settle</strong>The actual cost replaces the reservation. Abandoned reservations get charged, never released.</div>
+    </div>
+    <p>Per-path and global daily ceilings are enforced atomically, so concurrent workers can't race past a limit.</p>
+    <p>If a dependency fails, the system stops instead of guessing. One recent fix: an Etherscan rate limit was making verified contracts look unverified, so that path now fails closed. Another added a gate that removed a cluster of false matches on boilerplate symbols.</p>
+  </section>
+
+  <section>
+    <h2>What it hasn't done</h2>
+    <ul>
+      <li>It has produced no confirmed vulnerability and $0 in bounty income. I built it to hunt bugs, and that goal hasn't paid.</li>
+      <li>It is 7 weeks old and has not run for a client. You would be an early customer.</li>
+      <li>It does not watch queued governance or oracle and parameter changes, and it does not know what has been reviewed. Those are pilot builds.</li>
+      <li>About a third of audit reports parse automatically. The rest need more work, which is why the register has a "can't tell" state.</li>
+      <li>The spend ledger is safe on one machine. I keep spending on a single host rather than assume otherwise.</li>
+    </ul>
+    <p>I keep inspected facts, reported facts and hypotheses apart. You would want the same from anything triaging your alerts.</p>
+  </section>
+
+  <section>
+    <h2>Fifteen minutes</h2>
+    <p>Tell me what you check by hand each week, and when your last upgrade was compared against your audits. If it's a one-time need, I'll say so.</p>
+    <p class="contact"><span>Telegram [@handle]</span><span>X [@handle]</span></p>
+  </section>
+
+</main>
